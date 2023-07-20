@@ -9,11 +9,18 @@ var customerList = mutableListOf<Customer>(
     Customer("홍길동"
         , 200
         , LocalDate.parse("2023-08-31", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        , LocalDate.parse("2023-09-31", DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+        , LocalDate.parse("2023-09-31", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        , 10000, 1000)
     , Customer("김철수"
         , 300
         , LocalDate.parse("2023-06-31", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        , LocalDate.parse("2023-07-03", DateTimeFormatter.ofPattern("yyyy-MM-dd")) )
+        , LocalDate.parse("2023-07-03", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        , 10000, 1000)
+    ,Customer("홍길동"
+        , 400
+        , LocalDate.parse("2023-11-31", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        , LocalDate.parse("2023-12-31", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        , 10000, 1000)
 )
 
 fun main() {
@@ -24,7 +31,7 @@ fun main() {
         var menuSelect = readLine()
         if (menuSelect == "1") {
             println("예약자분의 성함을 알려주세요.")
-            var name = readLine()
+            var name = readLine()!!
             println("예약할 방번호를 입력해주세요")
             var roomNum = readLine()!!
             while (roomNum.toInt() < 100 || roomNum.toInt() > 999) {
@@ -35,7 +42,6 @@ fun main() {
                 println(red + "올바르지 않은 방번호입니다. 방번호는 100~999 영역 이내입니다." + reset)
                 roomNum = readLine()!!
             }
-
             //체크인 날짜 확인
             var checkRoom = true
             lateinit var checkInDate:LocalDate
@@ -75,6 +81,11 @@ fun main() {
                 checkOut = readLine()!!
                 checkOutDate = LocalDate.parse(checkOut, DateTimeFormatter.ofPattern("yyyyMMdd"))
             }
+            //random
+            var randomIncome = (10000..1000000).random()
+            var randomOutgoings = (10000..randomIncome).random()
+            var customer = Customer(name, roomNum.toInt(), checkInDate, checkOutDate, randomIncome, randomOutgoings)
+            customerList.add(customer)
             println("호텔 예약이 완료되었습니다.")
             break
         } else if (menuSelect == "2") {
@@ -112,15 +123,52 @@ fun main() {
             println("조회하실 사용자 이름을 입력하세요.")
             var checkName = readLine()
             var i :Int = 0
+            var checkCustomer = true
             for(index in customerList){
                 if(checkName == customerList[i].name){
-                    var randomIncome = (10000..1000000).random()
-                    var randomOutgoings = (10000..randomIncome).random()
-                    println("1. 초기금액으로 ${randomIncome}원 입금되었습니다.")
-                    println("2. 예약금으로 ${randomOutgoings}원 출금되었습니다.")
+                    println("1. 초기금액으로 ${customerList[i].income}원 입금되었습니다.")
+                    println("2. 예약금으로 ${customerList[i].outgoins}원 출금되었습니다.")
+                    checkCustomer = false
                     break
+                }
+                i++
+            }
+            if(checkCustomer){
+                println("예약된 사용자를 찾을 수 없습니다.")
+            }
+            continue
+        }else if(menuSelect=="6"){
+            println("예약을 변경할 사용자 이름을 입력하세요.")
+            var motifyName = readLine()
+            var i = 0
+            var checkName = true
+            var customerBookingList = mutableListOf<Int>()
+            for(index in customerList){
+                if(motifyName == customerList[i].name){
+                    checkName = false
+                    customerBookingList.add(i)
+                }
+                i++
+            }
+            if(checkName){
+                println("사용자 이름으로 예약된 목록을 찾을 수 없습니다.")
+            }else{
+                println("")
+                var i = 0
+                for(index in customerBookingList){
+                    println("${i+1}. 방번호 : ${customerList[customerBookingList[i]].roomNum}호" +
+                            ", 체크인 : ${customerList[customerBookingList[i]].checkInDate} " +
+                            ", 체크아웃: ${customerList[customerBookingList[i]].checkOutDate}")
+                    i++
+                }
+                var checkBookingNum = readLine()
+                println("해당 예약을 어떻게 하시겠어요 1. 변경 2. 취소 / 이외 번호. 메뉴로 돌아가기")
+                var checkBooking = readLine()
+                if(checkBooking=="1"){
+                    //체크인 체크아웃 변경
+                }else if(checkBooking=="2"){
+                    //환불 알고리즘
                 }else{
-                    println("사용자를 찾을 수 없습니다.")
                     break
                 }
             }
