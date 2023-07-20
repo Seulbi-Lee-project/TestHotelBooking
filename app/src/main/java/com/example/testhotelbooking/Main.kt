@@ -108,9 +108,26 @@ fun main() {
         }else if (menuSelect == "4") {
             println("프로그램을 종료합니다.")
             break
+        }else if(menuSelect == "5"){
+            println("조회하실 사용자 이름을 입력하세요.")
+            var checkName = readLine()
+            var i :Int = 0
+            for(index in customerList){
+                if(checkName == customerList[i].name){
+                    var randomIncome = (10000..1000000).random()
+                    var randomOutgoings = (10000..randomIncome).random()
+                    println("1. 초기금액으로 ${randomIncome}원 입금되었습니다.")
+                    println("2. 예약금으로 ${randomOutgoings}원 출금되었습니다.")
+                    break
+                }else{
+                    println("사용자를 찾을 수 없습니다.")
+                    break
+                }
+            }
+            continue
         } else {
             println("잘못된 번호입니다.")
-            break
+            continue
         }
     }
 }
