@@ -2,6 +2,7 @@ package com.example.testhotelbooking
 
 import java.lang.reflect.Constructor
 import java.time.LocalDate
+import java.time.Period
 import java.time.format.DateTimeFormatter
 
 
@@ -42,46 +43,11 @@ fun main() {
                 println(red + "올바르지 않은 방번호입니다. 방번호는 100~999 영역 이내입니다." + reset)
                 roomNum = readLine()!!
             }
-            //체크인 날짜 확인
-            var checkRoom = true
-            lateinit var checkInDate:LocalDate
-            while (checkRoom){
-                println("체크인 날짜를 입력해주세요 표기방식. 20230631")
-                var checkIn = readLine()!!
-                checkInDate = LocalDate.parse(checkIn, DateTimeFormatter.ofPattern("yyyyMMdd"))
-                var toDay = LocalDate.now()
-                while (checkInDate < toDay) {
-                    println("체크인은 지난날은 선택할 수 없습니다.")
-                    checkIn = readLine()!!
-                    checkInDate = LocalDate.parse(checkIn, DateTimeFormatter.ofPattern("yyyyMMdd"))
-                }
-                //방번호와 체크인 날짜 확인하기
-                var i = 0
-                for(index in customerList){
-                    if(roomNum.toInt() == customerList[i].roomNum){
-                        if(checkInDate >= customerList[i].checkInDate && checkInDate <= customerList[i].checkOutDate){
-                            println("같은 날에 체크인 할 수 없습니다. 다른 날짜를 선택해 주세요.")
-                            break
-                        }else{
-                            checkRoom = false
-                            break
-                        }
-                    }else{
-                        checkRoom = false
-                        break
-                    }
-                }
-            }
-            //체크아웃 날짜
-            println("체크아웃 날짜를 입력해주세요 표기방식 : 20230631")
-            var checkOut = readLine()!!
-            var checkOutDate = LocalDate.parse(checkOut, DateTimeFormatter.ofPattern("yyyyMMdd"))
-            while (checkOutDate <= checkInDate) {
-                println("체크아웃 날짜는 체크인 날짜보다 같거나 지난 날을 선택할 수 없습니다.")
-                checkOut = readLine()!!
-                checkOutDate = LocalDate.parse(checkOut, DateTimeFormatter.ofPattern("yyyyMMdd"))
-            }
-            //random
+            //체크인 날짜 확인하고 받아 오기
+            var checkInDate = CheckService().checkInDate(roomNum)
+            //체크아웃 날짜 확인하고 받아 오기
+            var checkOutDate = CheckService().checkOutDate(checkInDate)
+            //random 금액
             var randomIncome = (10000..1000000).random()
             var randomOutgoings = (10000..randomIncome).random()
             var customer = Customer(name, roomNum.toInt(), checkInDate, checkOutDate, randomIncome, randomOutgoings)
@@ -127,7 +93,7 @@ fun main() {
             for(index in customerList){
                 if(checkName == customerList[i].name){
                     println("1. 초기금액으로 ${customerList[i].income}원 입금되었습니다.")
-                    println("2. 예약금으로 ${customerList[i].outgoins}원 출금되었습니다.")
+                    println("2. 예약금으로 ${customerList[i].deposit}원 출금되었습니다.")
                     checkCustomer = false
                     break
                 }
@@ -153,7 +119,6 @@ fun main() {
             if(checkName){
                 println("사용자 이름으로 예약된 목록을 찾을 수 없습니다.")
             }else{
-                println("")
                 var i = 0
                 for(index in customerBookingList){
                     println("${i+1}. 방번호 : ${customerList[customerBookingList[i]].roomNum}호" +
@@ -161,13 +126,57 @@ fun main() {
                             ", 체크아웃: ${customerList[customerBookingList[i]].checkOutDate}")
                     i++
                 }
-                var checkBookingNum = readLine()
                 println("해당 예약을 어떻게 하시겠어요 1. 변경 2. 취소 / 이외 번호. 메뉴로 돌아가기")
-                var checkBooking = readLine()
-                if(checkBooking=="1"){
-                    //체크인 체크아웃 변경
-                }else if(checkBooking=="2"){
+                var checkBookingNum = readLine()!!
+                if(checkBookingNum=="1"){
+                    println("변경할 목록을 선택해 주세요.")
+                    var checkListNum = readLine()!!
+                    var index = customerBookingList[((checkListNum.toInt()-1))]
+                    var roomNum = customerList[index].roomNum.toString()
+                    var checkInDate = CheckService().checkInDate(roomNum)
+                    var checkOutDate = CheckService().checkOutDate(checkInDate)
+                    var customer = Customer(
+                        customerList[index].name
+                        , customerList[index].roomNum
+                        , checkInDate
+                        , checkOutDate
+                        , customerList[index].income
+                        , customerList[index].deposit)
+                    customerList.set(index, customer)
+                    println("예약이 변경 되었습니다.")
+                    continue
+                }else if(checkBookingNum=="2"){
+                    println("취소를 선택하셨습니다.\n" +
+                            "[취소 유의사항]\n" +
+                            "체크인 3일 이전 취소 예약금 환불 불가\n" +
+                            "체크인 5일 이전 취소 예약금 30% 환불\n" +
+                            "체크인 7일 이전 취소 예약금 50% 환불\n" +
+                            "체크인 14일 이전 취소 예약금 80% 환불\n" +
+                            "체크인 30일 이전 취소 예약금의 100% 환불")
+                    println("취소할 목록을 선택해 주세요.")
+                    var checkListNum = readLine()!!
+                    var index = customerBookingList[((checkListNum.toInt()-1))]
+                    var toDay:LocalDate = LocalDate.now()
+                    var checkInDate:LocalDate = customerList[index].checkInDate
+                    var period = Period.between(toDay, checkInDate)
+                    println("예약일로 부터 ${period.days}일 전입니다.")
                     //환불 알고리즘
+                    var betweenDate = period.days.toInt()
+                    var deposit:Int = customerList[index].deposit
+                    val number : Int by lazy {
+                        if(betweenDate >= 30){
+                            deposit
+                        }else if (betweenDate >=14){
+                            (deposit*0.8).toInt()
+                        }else if (betweenDate >=7){
+                            (deposit*0.5).toInt()
+                        }else if (betweenDate >=5){
+                            (deposit*0.3).toInt()
+                        }else{
+                            0
+                        }
+                    }
+                    println("환불금은 ${number}원 입니다.")
                 }else{
                     break
                 }

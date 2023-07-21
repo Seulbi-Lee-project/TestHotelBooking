@@ -8,14 +8,14 @@ class Customer {
     var checkInDate: LocalDate
     var checkOutDate: LocalDate
     var income: Int
-    var outgoins: Int
+    var deposit: Int
 
-    constructor(name: String, roomNum : Int, checkInDate:LocalDate, checkOutDate:LocalDate, income:Int, outgoins:Int){
+    constructor(name: String, roomNum : Int, checkInDate:LocalDate, checkOutDate:LocalDate, income:Int, deposit:Int){
         this.name = name
         this.roomNum = roomNum
         this.checkInDate = checkInDate
         this.checkOutDate = checkOutDate
         this.income = income
-        this.outgoins = outgoins
+        this.deposit = deposit
     }
 }
